@@ -1,5 +1,6 @@
 export type ZipFile = {
-  name?: string;
+  name: string;
   size?: number;
   data?: string;
+  ext: string;
 };

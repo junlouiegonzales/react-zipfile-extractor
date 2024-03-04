@@ -5,7 +5,11 @@ import {
   Button,
   Card,
   CardContent,
+  FormControl,
   Grid,
+  InputAdornment,
+  InputLabel,
+  OutlinedInput,
   Stack,
   Table,
   TableBody,
@@ -25,6 +29,7 @@ import { ZipFile } from "./common/types";
 import JSZip from "jszip";
 import _ from "lodash";
 import { saveAs } from "file-saver";
+import { decoupleFileName } from "./common/helpers";
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -43,10 +48,10 @@ const App = () => {
   const [zipFiles, setZipFiles] = useState<ZipFile[]>();
   const [fileData, setFileData] = useState<File>();
   const [isCompleted, setIsCompleted] = useState(false);
+  const [fileName, setFileName] = useState("");
 
-  const getFileIcon = (name: string | undefined) => {
-    if (!name) return;
-    switch (name.split(".").pop()) {
+  const getFileIcon = (ext: string) => {
+    switch (ext) {
       case "png":
       case "jpg":
       case "jpeg":
@@ -114,6 +119,23 @@ const App = () => {
 
             {zipFiles && zipFiles.length > 1 ? (
               <Box mt={4}>
+                <Box mb={2}>
+                  <FormControl variant="outlined" fullWidth={true}>
+                    <InputLabel htmlFor="input-filename">File Name</InputLabel>
+                    <OutlinedInput
+                      value={fileName}
+                      label="File Name"
+                      id="input-filename"
+                      onChange={(e) => setFileName(e.target.value)}
+                      endAdornment={
+                        <InputAdornment position="end">zip</InputAdornment>
+                      }
+                      inputProps={{
+                        "aria-label": "weight",
+                      }}
+                    />
+                  </FormControl>
+                </Box>
                 <TableContainer>
                   <Table size="small" aria-label="Dense Table">
                     <TableBody>
@@ -130,7 +152,7 @@ const App = () => {
                             style={{ paddingLeft: 0 }}
                           >
                             <Stack direction="row" alignItems="center" gap={1}>
-                              {getFileIcon(file.name)}
+                              {getFileIcon(decoupleFileName(file.name).ext)}
                               {file.name}
                             </Stack>
                           </TableCell>
@@ -155,7 +177,7 @@ const App = () => {
                         const reader = new FileReader();
                         reader.onload = () => {
                           if (fileData) {
-                            saveAs(fileData, fileData?.name);
+                            saveAs(fileData, `${fileName}.zip`);
                           }
                         };
                         reader.onloadend = () => {
@@ -209,10 +231,12 @@ const App = () => {
                               return {
                                 name: t.name,
                                 date: t.date,
+                                ext: "",
                               };
                             });
                           setZipFiles(files);
                           setFileData(file);
+                          setFileName(decoupleFileName(file.name).name);
                         });
                       }
                     }}
